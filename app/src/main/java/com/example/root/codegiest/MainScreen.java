@@ -1,6 +1,5 @@
 package com.example.root.codegiest;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -19,12 +18,14 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.root.codegiest.post.Post;
+import com.example.root.codegiest.post.PostAdapter;
+import com.example.root.codegiest.user.Profile;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -197,8 +198,9 @@ public class MainScreen extends AppCompatActivity implements NavigationView.OnNa
             locateBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    intent = new Intent(MainScreen.this , LocateBtn.class);
+                    /*intent = new Intent(MainScreen.this , LocateBtn.class);
                     startActivity(intent);
+                    */
                 }
             });
 

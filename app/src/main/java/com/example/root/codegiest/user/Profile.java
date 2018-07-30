@@ -1,7 +1,9 @@
-package com.example.root.codegiest;
+package com.example.root.codegiest.user;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.example.root.codegiest.R;
 
 public class Profile extends AppCompatActivity {
 

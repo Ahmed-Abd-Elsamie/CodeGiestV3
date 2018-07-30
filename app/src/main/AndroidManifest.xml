@@ -34,14 +34,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Login" />
-        <activity android:name=".Register" />
+        <activity android:name=".user.Login" />
+        <activity android:name=".user.Register" />
         <activity android:name=".PhoneAuth" />
         <activity android:name=".Verification" />
         <activity android:name=".MainScreen" />
-        <activity android:name=".Map" />
-        <activity android:name=".LocateBtn" />
-        <activity android:name=".Profile" />
+        <activity android:name=".user.Profile" />
         <activity android:name=".History" />
         <activity android:name=".Favorite" />
         <activity android:name=".Add" />

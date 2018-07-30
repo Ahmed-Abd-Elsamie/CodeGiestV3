@@ -1,4 +1,4 @@
-package com.example.root.codegiest;
+package com.example.root.codegiest.user;
 
 /**
  * Created by root on 26/07/18.
