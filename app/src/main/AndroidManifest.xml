@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -15,17 +14,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAJABBHOBWK5aYguP43O0bcW4xFI3w3Lmo" />
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
-
-
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -45,9 +39,9 @@
         <activity android:name=".Add" />
         <activity android:name=".Maps.Maps" />
         <activity
-            android:name=".MainTest"
+            android:name=".mainScreen.MainTest"
             android:label="@string/title_activity_main_test"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

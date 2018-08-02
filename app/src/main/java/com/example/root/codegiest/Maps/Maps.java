@@ -293,7 +293,7 @@ public class Maps extends AppCompatActivity implements OnMapReadyCallback,
                                     */
                             Intent intent = getIntent();
                             String lat = intent.getStringExtra("lat");
-                            String longg = intent.getStringExtra("lat");
+                            String longg = intent.getStringExtra("lang");
 
                             double v1 = Double.parseDouble(lat);
                             double v2 = Double.parseDouble(longg);

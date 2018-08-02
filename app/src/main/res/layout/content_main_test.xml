@@ -1,56 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.root.codegiest.MainTest"
-    tools:showIn="@layout/app_bar_main_test">
+    tools:context="com.example.root.codegiest.mainScreen.MainTest"
+    tools:showIn="@layout/app_bar_main_test"
 
 
-
+    >
 
 
     <TextView
+        android:id="@+id/post_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No Posts Yet !"
-        android:id="@+id/post_state"
-        android:textSize="20dp"
         android:gravity="center"
+        android:text="No Posts Yet !"
+        android:textSize="20dp"
         android:visibility="gone"
 
         />
 
 
-    <ListView
-        android:id="@+id/list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-
-
-        />
-
-
-
-
     <ProgressBar
-
-        android:id="@+id/prog_loading"
+        android:id="@+id/pro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/swipeRefreshLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/swipeRefreshLayout"
+
+
+        />
+
+    <com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/collapse"
+        android:layout_marginBottom="0dp"
+        android:layout_marginTop="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/collapse"
+        app:layout_constraintVertical_bias="0.0"
+        app:srl_direction="both"
+        tools:layout_editor_absoluteX="0dp">
+
+
+        <android.support.v7.widget.RecyclerView
+
+
+            android:id="@+id/main_screen_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            android:paddingLeft="7dp"
+            android:paddingRight="7dp"
+
+
+            >
+
+
+        </android.support.v7.widget.RecyclerView>
+
+
+    </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
+
+    <android.support.design.widget.CollapsingToolbarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        app:layout_constraintBottom_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.745"
+        android:id="@+id/collapse"
+        android:fitsSystemWindows="true"
+        app:contentScrim="?attr/colorPrimary"
+        app:layout_scrollFlags="scroll|snap"
+
+
+        >
+
+
+        <include
+            android:id="@+id/include"
+            layout="@layout/new_post"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
 
 
 
-</android.support.constraint.ConstraintLayout>
+    </android.support.design.widget.CollapsingToolbarLayout>
+
+
+</RelativeLayout>

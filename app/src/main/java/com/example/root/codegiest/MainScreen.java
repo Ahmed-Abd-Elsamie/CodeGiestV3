@@ -94,10 +94,10 @@ public class MainScreen extends AppCompatActivity implements NavigationView.OnNa
         referenceUsers = FirebaseDatabase.getInstance().getReference().child("users");
         list = new ArrayList<>();
         //Select our list view from the layout
-        listView = (ListView) findViewById(R.id.list);
+        //listView = (ListView) findViewById(R.id.list);
         txtState = (TextView)findViewById(R.id.post_state);
         btn_post = (FloatingActionButton) findViewById(R.id.fab_add_post);
-        progressBar = (ProgressBar) findViewById(R.id.prog_loading);
+        //progressBar = (ProgressBar) findViewById(R.id.prog_loading);
 
         //Select the drawer view from the xml file
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -310,8 +310,8 @@ public class MainScreen extends AppCompatActivity implements NavigationView.OnNa
 
                     }
 
-                    PostAdapter adapter = new PostAdapter(MainScreen.this , list);
-                    listView.setAdapter(adapter);
+                    //PostAdapter adapter = new PostAdapter(MainScreen.this , list);
+                    //listView.setAdapter(adapter);
 
                     progressBar.setVisibility(View.INVISIBLE);
 
@@ -365,87 +365,6 @@ public class MainScreen extends AppCompatActivity implements NavigationView.OnNa
 
 
     private void AddDialog(){
-
-        LayoutInflater inflater = getLayoutInflater();
-        View view = inflater.inflate(R.layout.new_post,null);
-
-        final EditText txtDesc = (EditText) view.findViewById(R.id.txt_desc);
-        Button btnPOST = (Button) view.findViewById(R.id.btn_dialog);
-        Button btnCancel  = (Button) view.findViewById(R.id.btn_dialog_cancel);
-        final ProgressBar progressBar1 = (ProgressBar) view.findViewById(R.id.prog_post);
-
-
-
-        final AlertDialog alertDialog = new AlertDialog.Builder(MainScreen.this).create();
-
-        // Setting Dialog Title
-        alertDialog.setTitle("Alert Dialog");
-
-        // Setting Dialog Message
-        alertDialog.setMessage("Welcome to AndroidHive.info");
-        alertDialog.setCancelable(false);
-
-
-        // Setting Icon to Dialog
-
-        // Setting OK Button
-
-        alertDialog.setView(view);
-        // Showing Alert Message
-        alertDialog.show();
-
-        btnPOST.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-
-
-
-                if (!TextUtils.isEmpty(txtDesc.getText().toString())){
-
-                    progressBar1.setVisibility(View.VISIBLE);
-
-
-
-                    Map<String , String> map = new HashMap<>();
-
-                    map.put("name" , Myname);
-                    map.put("userImg" , MyImg);
-                    map.put("date" , "default");
-                    map.put("desc" , txtDesc.getText().toString());
-                    map.put("like" , "like");
-
-                    reference.push().setValue(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-
-                            if (task.isSuccessful()){
-                                progressBar1.setVisibility(View.INVISIBLE);
-                                alertDialog.dismiss();
-                            }
-                        }
-                    });
-
-
-                }else {
-
-
-
-                }
-
-            }
-        });
-
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                alertDialog.dismiss();
-
-            }
-        });
-
-
 
 
     }

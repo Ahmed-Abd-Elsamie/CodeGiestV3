@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.root.codegiest.MainTest;
+import com.example.root.codegiest.mainScreen.MainTest;
 import com.example.root.codegiest.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;

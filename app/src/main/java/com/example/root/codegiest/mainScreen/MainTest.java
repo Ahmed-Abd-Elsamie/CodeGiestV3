@@ -1,10 +1,12 @@
-package com.example.root.codegiest;
+package com.example.root.codegiest.mainScreen;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,14 +21,19 @@ import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.root.codegiest.Favorite;
+import com.example.root.codegiest.History;
+import com.example.root.codegiest.R;
 import com.example.root.codegiest.post.Post;
 import com.example.root.codegiest.post.PostAdapter;
 import com.example.root.codegiest.user.Login;
+import com.example.root.codegiest.user.Profile;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
@@ -35,12 +42,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.StorageReference;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+import com.squareup.picasso.Picasso;
 
 import java.util.*;
 
@@ -49,7 +61,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MainTest extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
-    private DatabaseReference reference , referenceUsers;
+    private DatabaseReference referenceUsers , referenceLikes;
     private FirebaseAuth mAuth;
     private String uid;
     private StorageReference storageReference;
@@ -57,15 +69,33 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
     private FloatingActionButton btn_post;
     private String Myname;
     private String MyImg;
-    private ProgressBar progressBar;
     ListView listView ;
     private TextView txtState;
-    public static List<String> keys;
     private static final int PLACE_PICKER_REQUEST = 1;
     private Place place;
     TextView txtLoc;
     String mapLoc;
     String lat, lang;
+
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private DatabaseReference reference;
+    public static List<String> keys;
+    private ProgressBar progressBar;
+    private SwipyRefreshLayout swipeRefreshLayout;
+
+
+    private int num_item = 4;
+    private Button btnShare;
+    private Button btnLocation;
+    private EditText postText;
+    private CircleImageView btnUserPostImg;
+    private ImageButton btnPostImg;
+    private TextView postLoc;
+    private ProgressBar postProg;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,21 +109,96 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
         reference = FirebaseDatabase.getInstance().getReference().child("posts");
         referenceUsers = FirebaseDatabase.getInstance().getReference().child("users");
+        referenceLikes = FirebaseDatabase.getInstance().getReference().child("likes");
+
         list = new ArrayList<>();
         keys = new ArrayList<>();
-        //Select our list view from the layout
-        listView = (ListView) findViewById(R.id.list);
+
         txtState = (TextView)findViewById(R.id.post_state);
 
         LayoutInflater inflater = getLayoutInflater();
 
-        progressBar = (ProgressBar)findViewById(R.id.prog_loading);
+        reference = FirebaseDatabase.getInstance().getReference().child("posts");
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.main_screen_recycler);
+        progressBar = (ProgressBar)findViewById(R.id.pro);
+        swipeRefreshLayout = (SwipyRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        btnShare = (Button) findViewById(R.id.btn_share);
+        btnLocation = (Button) findViewById(R.id.btn_post_loc);
+        postText = (EditText) findViewById(R.id.post_txt);
+        btnPostImg = (ImageButton) findViewById(R.id.btn_post_img);
+        btnUserPostImg = (CircleImageView) findViewById(R.id.btn_user_post_img);
+        postLoc = (TextView) findViewById(R.id.txt_loc);
+        postProg = (ProgressBar) findViewById(R.id.post_prog);
+
+
+
+
+        mRecyclerView.setHasFixedSize(true);
+
+
+        mLayoutManager = new LinearLayoutManager(this);
+
+
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh(SwipyRefreshLayoutDirection direction) {
+
+                num_item = num_item + 1;
+                mRecyclerView.refreshDrawableState();
+                GetAllPosts();
+                swipeRefreshLayout.setRefreshing(false);
+                mRecyclerView.scrollToPosition(num_item);
+
+
+            }
+        });
+
+
+        btnShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                NewPost();
+
+
+            }
+        });
+
+
+        btnLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+                try {
+                    startActivityForResult(builder.build(MainTest.this),PLACE_PICKER_REQUEST);
+                } catch (GooglePlayServicesRepairableException e) {
+                    e.printStackTrace();
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    e.printStackTrace();
+                }
+
+
+
+            }
+        });
+
+
+
+
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+      /*  FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,13 +206,12 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
                         .setAction("Action", null).show();
 
                         */
-                NewPost();
+              /*  NewPost();
 
             }
         });
 
-        //  Buttons actions
-
+        */
 
 
 
@@ -121,6 +225,10 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
+
+
     }
 
     @Override
@@ -161,13 +269,26 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_home) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_profile) {
 
-        } else if (id == R.id.nav_manage) {
+            Intent i = new Intent(MainTest.this , Profile.class);
+            startActivity(i);
+
+        } else if (id == R.id.nav_history) {
+
+            Intent i = new Intent(MainTest.this , History.class);
+            startActivity(i);
+
+        } else if (id == R.id.nav_fav){
+
+            Intent i = new Intent(MainTest.this , Favorite.class);
+            startActivity(i);
+
+        }else if (id == R.id.nav_manage) {
+
+
 
         } else if (id == R.id.nav_share) {
 
@@ -189,8 +310,36 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
     protected void onStart() {
         super.onStart();
 
+        progressBar.setVisibility(View.VISIBLE);
+
+        // getting my data
+
+        referenceUsers.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                Myname = dataSnapshot.child(uid).child("name").getValue().toString();
+                MyImg = dataSnapshot.child(uid).child("img").getValue().toString();
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        Picasso.with(MainTest.this).load(MyImg).into(btnUserPostImg);
+
+
         GetAllPosts();
+
     }
+
+
+
+
+
 
     private void GetAllPosts(){
 
@@ -198,8 +347,10 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
         final List<Post> list = new ArrayList<>();
 
+        Query query = reference.limitToFirst(num_item);
 
-        reference.addValueEventListener(new ValueEventListener() {
+
+        query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -212,9 +363,12 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
                         Post post = new Post();
 
 
+                        int num = NumLikes(snapshot.getKey().toString());
+
+
                         post.setName(snapshot.child("name").getValue().toString());
                         post.setDesc(snapshot.child("desc").getValue().toString());
-                        post.setLike(snapshot.child("like").getValue().toString());
+                        post.setLike(num + "");
                         post.setUserImg(snapshot.child("userImg").getValue().toString());
                         post.setDate(snapshot.child("date").getValue().toString());
                         post.setLoc(snapshot.child("loc").getValue().toString());
@@ -229,19 +383,9 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
                     }
 
-                    PostAdapter adapter = new PostAdapter(MainTest.this , list);
-                    listView.setAdapter(adapter);
 
-                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-
-
-                        }
-                    });
-
-
+                    mAdapter = new PostAdapter(list , MainTest.this);
+                    mRecyclerView.setAdapter(mAdapter);
 
                     progressBar.setVisibility(View.INVISIBLE);
 
@@ -249,9 +393,10 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
 
 
+
                 }else {
 
-                    txtState.setVisibility(View.VISIBLE);
+
 
                 }
 
@@ -289,7 +434,7 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
                 lat = String.valueOf(latLng.latitude);
                 lang = String.valueOf(latLng.longitude);
 
-                txtLoc.setText(mapLoc);
+                postLoc.setText(mapLoc);
 
 
             }
@@ -302,30 +447,64 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
     private void NewPost(){
 
-        // getting my data
 
-
-        referenceUsers.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                Myname = dataSnapshot.child(uid).child("name").getValue().toString();
-                MyImg = dataSnapshot.child(uid).child("img").getValue().toString();
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-
-        AddDialog();
+        //AddDialog();
+        SharePost();
 
 
     }
 
+
+    private void SharePost(){
+
+        String postTXT = postText.getText().toString();
+        String Location = mapLoc;
+
+
+
+        if (!TextUtils.isEmpty(postTXT) && (Location != null) || !Location.equals("")){
+
+            postProg.setVisibility(View.VISIBLE);
+
+
+
+            java.util.Map<String , String> map = new HashMap<>();
+
+            map.put("name" , Myname);
+            map.put("userImg" , MyImg);
+            map.put("date" , "default");
+            map.put("desc" , postTXT);
+            map.put("like" , "like");
+            map.put("loc" , mapLoc);
+            map.put("lat" , lat);
+            map.put("lang" , lang);
+
+
+            reference.push().setValue(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+
+                    if (task.isSuccessful()){
+                        postProg.setVisibility(View.INVISIBLE);
+                        postText.setText("");
+                        postLoc.setText("");
+
+                    }
+                }
+            });
+
+
+        }else {
+
+
+
+        }
+
+
+    }
+
+
+    /*
 
     private void AddDialog(){
 
@@ -347,20 +526,10 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
         final AlertDialog alertDialog = new AlertDialog.Builder(MainTest.this).create();
 
-        // Setting Dialog Title
         alertDialog.setTitle("New Post");
-
-        // Setting Dialog Message
         alertDialog.setMessage("Please write a detailed post");
         alertDialog.setCancelable(false);
-
-
-        // Setting Icon to Dialog
-
-        // Setting OK Button
-
         alertDialog.setView(view);
-        // Showing Alert Message
         alertDialog.show();
 
         btnPOST.setOnClickListener(new View.OnClickListener() {
@@ -442,8 +611,31 @@ public class MainTest extends AppCompatActivity implements NavigationView.OnNavi
 
     }
 
+*/
 
 
+
+    private int NumLikes(String key){
+
+        final int[] num = {0};
+
+        referenceLikes.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                num[0] = (int) dataSnapshot.getChildrenCount();
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        return num[0];
+    }
 
 
 

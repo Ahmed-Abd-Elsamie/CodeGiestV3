@@ -2,24 +2,25 @@ package com.example.root.codegiest.post;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.root.codegiest.MainTest;
 import com.example.root.codegiest.Maps.Maps;
 import com.example.root.codegiest.R;
-import com.firebase.client.snapshot.ChildKey;
-import com.google.android.gms.maps.model.LatLng;
+import com.example.root.codegiest.mainScreen.MainTest;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -31,156 +32,173 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 
 
-public class PostAdapter extends ArrayAdapter<Post> {
+public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
 
+    private List<Post> list;
     private Activity context;
-    private List<Post> postList;
-    private DatabaseReference referenceLike;
-    private List<ChildKey> childKeys;
+    private DatabaseReference reference;
+    private int n = 0;
+    private FirebaseAuth mAuth;
     private String uid;
-    private FirebaseAuth auth;
-    String like = "";
-    Button btnLike;
-    int currentPos = 0;
-    public static final int PLACE_PICKER_REQUEST = 1;
-    LatLng latLng;
-    private boolean check = false;
+    private boolean likeCheck = false;
 
-    public PostAdapter(Activity context, List<Post> postList) {
-        super(context, R.layout.main_screen_adapter , postList);
-        this.context = context;
-        this.postList = postList;
-        referenceLike = FirebaseDatabase.getInstance().getReference().child("posts");
-        auth = FirebaseAuth.getInstance();
-        uid = auth.getCurrentUser().getUid().toString();
-        latLng = new LatLng(156,615);
 
+    // Provide a reference to the views for each data item
+    // Complex data items may need more than one view per item, and
+    // you provide access to all the views for a data item in a view holder
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        // each data item is just a string in this case
+        public View view;
+        public TextView txtName;
+        public TextView txtDate;
+        public Button btnLocation;
+        public TextView txtDesc;
+        public CircleImageView userImg;
+        public Button LikeBtn;
+        public ImageButton LocationBtn;
+
+
+
+        public ViewHolder(View v) {
+            super(v);
+            view = v;
+            txtName = (TextView) view.findViewById(R.id.name_textView);
+            txtDate = (TextView) view.findViewById(R.id.date_textView);
+            txtDesc = (TextView) view.findViewById(R.id.desc_textView);
+            btnLocation = (Button) view.findViewById(R.id.btnLoc);
+            userImg = (CircleImageView) view.findViewById(R.id.imageView);
+            LikeBtn = (Button) view.findViewById(R.id.like_button);
+            LocationBtn = (ImageButton) view.findViewById(R.id.locate_button);
+
+
+
+        }
 
     }
 
+    // Provide a suitable constructor (depends on the kind of dataset)
+    public PostAdapter(List<Post> postList , Activity mContext) {
+        list = postList;
+        context = mContext;
+        reference = FirebaseDatabase.getInstance().getReference().child("likes");
+        mAuth = FirebaseAuth.getInstance();
+        uid = mAuth.getCurrentUser().getUid().toString();
 
-
-    @Override
-    public int getCount() {
-        return this.postList.size();
     }
 
-    @NonNull
+    // Create new views (invoked by the layout manager)
     @Override
-    public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public PostAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        // create a new view
+        View v = (View) LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.main_screen_adapter, parent, false);
 
-        LayoutInflater inflater = LayoutInflater.from(getContext());
+        PostAdapter.ViewHolder vh = new PostAdapter.ViewHolder(v);
+        return vh;
+    }
 
-        View view = inflater.inflate(R.layout.main_screen_adapter , parent , false);
+    // Replace the contents of a view (invoked by the layout manager)
+    @Override
+    public void onBindViewHolder(final PostAdapter.ViewHolder holder, final int position) {
+        // - get element from your dataset at this position
+        // - replace the contents of the view with that element
+        //holder.txtName.setText(mDataset[position]);
 
-        TextView name = (TextView) view.findViewById(R.id.name_textView);
-        TextView date = (TextView) view.findViewById(R.id.date_textView);
-        TextView desc = (TextView) view.findViewById(R.id.desc_textView);
-        TextView txtLocation = (TextView) view.findViewById(R.id.txtLoc);
-
-        ImageButton btnFav = (ImageButton) view.findViewById(R.id.favorite_button);
-        ImageButton btnMention = (ImageButton) view.findViewById(R.id.mention_button);
-        ImageButton btnLocation = (ImageButton) view.findViewById(R.id.locate_button);
-        btnLike = (Button) view.findViewById(R.id.like_button);
-        currentPos = position;
-
-        CircleImageView img = (CircleImageView)view.findViewById(R.id.imageView);
-
-
-        final Post itemPost = getItem(position);
-
+        final Post post = list.get(position);
+        holder.txtName.setText(post.getName());
+        holder.txtDate.setText(post.getDate());
+        holder.txtDesc.setText(post.getDesc());
+        holder.btnLocation.setText(post.getLoc());
+        Picasso.with(context).load(post.getUserImg()).into(holder.userImg);
+        holder.LikeBtn.setText(post.getLike());
 
 
-        btnLocation.setOnClickListener(new View.OnClickListener() {
+
+
+        holder.LocationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                Intent intent = new Intent(context , Maps.class);
-                intent.putExtra("lat" , itemPost.getLat());
-                intent.putExtra("long" , itemPost.getLang());
+                String lat = post.getLat();
+                String lang = post.getLang();
 
-                context.startActivity(intent);
+                Intent i = new Intent(context , Maps.class);
+                i.putExtra("lat" , lat);
+                i.putExtra("lang" , lang);
+
+                context.startActivity(i);
+
 
             }
         });
 
 
-        btnLike.setOnClickListener(new View.OnClickListener() {
+
+
+
+
+        holder.LikeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
+                Toast.makeText(context , MainTest.keys.get(position) ,Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context , n ,Toast.LENGTH_SHORT).show();
 
-                if (check == true){
-
-                    btnLike.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like_gray , 0 , 0 , 0);
-                    check = false;
-
-                }else {
-
-                    btnLike.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like_black , 0 , 0 , 0);
-                    check = true;
-
-                }
-
-
-                String key = MainTest.keys.get(position);
-                //setLike(btnLike , key);
-
-
-
+                setLike(holder.LikeBtn , MainTest.keys.get(position));
 
             }
         });
 
 
-        name.setText(itemPost.getName());
-        date.setText(itemPost.getDate());
-        desc.setText(itemPost.getDesc());
-        txtLocation.setText(itemPost.getLoc());
 
+    }
 
-
-        Picasso.with(context).load(itemPost.getUserImg()).into(img);
-
-        return view;
-
+    // Return the size of your dataset (invoked by the layout manager)
+    @Override
+    public int getItemCount() {
+        return list.size();
     }
 
 
 
+    private void setLike(final Button btnLike , final String postKey){
 
-/*
-
-    private void setLike(final Button Like , final String k){
+        likeCheck = true;
 
 
-        referenceLike.addValueEventListener(new ValueEventListener() {
+        reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                if (dataSnapshot.child(k).child("like").hasChild(uid)){
 
-                    int num = (int) dataSnapshot.child(k).child("like").getChildrenCount();
+                if (likeCheck == true){
 
-                    if (num ==  1){
 
-                        like = "1";
-                        Like.setText("1");
+                    if (dataSnapshot.child(postKey).hasChild(uid)){
 
-                    }else if (num > 1){
+                        reference.child(postKey).child(uid).removeValue();
+                        likeCheck = false;
+                        n = (int) dataSnapshot.child(postKey).getChildrenCount();
+                        btnLike.setText(n + "");
+                        btnLike.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like_gray,0,0,0);
 
-                        like = "more";
-                        Like.setText(num + "");
+                    }else {
+
+                        reference.child(postKey).child(uid).setValue("Like");
+                        n = (int) dataSnapshot.child(postKey).getChildrenCount();
+                        likeCheck = false;
+                        btnLike.setText(n + "");
+                        btnLike.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like_black,0,0,0);
 
                     }
 
 
-                }
-                else {
+                }else {
 
-                    like = "no";
+
 
                 }
+
 
 
             }
@@ -192,38 +210,9 @@ public class PostAdapter extends ArrayAdapter<Post> {
         });
 
 
-
-
-
-        if (like.equals("1")){
-
-            referenceLike.child(k).child("like").setValue("like");
-            Like.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like , 0 , 0 , 0);
-            //like = "";
-
-
-        }else if (like.equals("more")){
-
-            referenceLike.child(k).child("like").child(uid).removeValue();
-            Like.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like , 0 , 0 , 0);
-            //like = "";
-
-
-        }else if (like.equals("no")){
-
-            Like.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_like_black , 0 , 0 , 0);
-            referenceLike.child(k).child("like").child(uid).setValue("like");
-            //like = "";
-
-
-        }
-
-
-
-
     }
 
-*/
+
 
 
 

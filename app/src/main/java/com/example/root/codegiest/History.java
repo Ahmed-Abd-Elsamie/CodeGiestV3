@@ -23,6 +23,7 @@ public class History extends AppCompatActivity {
         // Set the content of the activity to use the activity_history.xml layout file
         setContentView(R.layout.activity_history);
 
+
         //Select the tabLayout from activity_history.xml file
         tabLayout = (TabLayout) findViewById(R.id.history_tab_layout);
 
